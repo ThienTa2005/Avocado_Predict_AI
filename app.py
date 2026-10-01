@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 import pandas as pd
 import streamlit as st
-from inference import load_bundle, prepare_data, predict
+from inference import load_bundle, prepare_data, predict, evaluation_metrics
 
 ROOT = Path(__file__).resolve().parent
 IS_AVOCADO = json.loads((ROOT / "model/metadata.json").read_text(encoding="utf-8"))["target"] == "AveragePrice"
@@ -10,8 +10,8 @@ TITLE = "Avocado" if IS_AVOCADO else "AMZN"
 st.set_page_config(page_title=f"{TITLE} · Dự đoán giá", page_icon="🥑" if IS_AVOCADO else "📈", layout="wide")
 
 @st.cache_resource
-def cached_bundle():
-    return load_bundle()
+def cached_bundle(framework="PyTorch"):
+    return load_bundle(framework)
 
 @st.cache_data
 def read_sample():
@@ -21,17 +21,13 @@ st.caption("RNN FORECAST · " + TITLE.upper())
 st.title(f"Dự đoán giá {TITLE}")
 st.write("Chọn dữ liệu, xem lịch sử và dự đoán giá ở bước tiếp theo bằng model RNN đã huấn luyện.")
 
-try:
-    bundle = cached_bundle()
-except Exception:
-    st.error("Không nạp được model. Kiểm tra model/pytorch_best.pt, metadata.json và thư viện đã cài.")
-    st.stop()
-metadata = bundle["metadata"]
+metadata = json.loads((ROOT / "model/metadata.json").read_text(encoding="utf-8"))
 target = metadata["target"]
 lookback = metadata["lookback"]
 
 with st.sidebar:
     st.header("Dữ liệu dự đoán")
+    selected_model = st.selectbox("Model dự đoán", ["PyTorch", "Keras", "So sánh cả hai"])
     source = st.radio("Nguồn dữ liệu", ["Dữ liệu mẫu", "Tải CSV"])
     group = "AMZN"
     if IS_AVOCADO:
@@ -74,25 +70,48 @@ st.line_chart(frame.set_index("Date")[[target]].rename(columns={target: "Giá (U
 with st.expander(f"Xem {lookback} quan sát dùng để dự đoán"):
     st.dataframe(window[["Date", target]], hide_index=True, width="stretch")
 
+frameworks = ["PyTorch", "Keras"] if selected_model == "So sánh cả hai" else [selected_model]
 if st.button("Dự đoán bước tiếp theo", type="primary"):
-    try:
-        result = predict(window[target].tolist(), bundle, group)
-        st.metric("Giá dự đoán", f"$ {result:,.4f}", f"{result-last:+.4f} USD so với giá cuối")
-        horizon = "Quan sát tiếp theo" if IS_AVOCADO else "Phiên giao dịch tiếp theo"
-        if IS_AVOCADO and window.Date.diff().dropna().eq(pd.Timedelta(days=7)).all():
-            horizon = "Tuần tiếp theo · " + (window.Date.iloc[-1] + pd.Timedelta(days=7)).strftime("%d/%m/%Y")
-        st.caption(horizon + " · PyTorch RNN")
-        output = pd.DataFrame([{"group": group, "last_observed_date": window.Date.iloc[-1].date(),
-            "last_price_usd": last, "prediction_usd": result, "horizon": horizon}])
+    horizon = "Quan sát tiếp theo" if IS_AVOCADO else "Phiên giao dịch tiếp theo"
+    if IS_AVOCADO and window.Date.diff().dropna().eq(pd.Timedelta(days=7)).all():
+        horizon = "Tuần tiếp theo · " + (window.Date.iloc[-1] + pd.Timedelta(days=7)).strftime("%d/%m/%Y")
+    rows = []
+    for framework, column in zip(frameworks, st.columns(len(frameworks))):
+        try:
+            with st.spinner(f"Đang dự đoán bằng {framework}..."):
+                result = predict(window[target].tolist(), cached_bundle(framework), group)
+            column.metric("Giá dự đoán" if len(frameworks) == 1 else f"Giá dự đoán · {framework}",
+                          f"$ {result:,.4f}", f"{result-last:+.4f} USD so với giá cuối")
+            column.caption(horizon + f" · {framework} RNN")
+            rows.append({"model": framework + " RNN", "group": group,
+                         "last_observed_date": window.Date.iloc[-1].date(),
+                         "last_price_usd": last, "prediction_usd": result, "horizon": horizon})
+        except Exception as exc:
+            column.error(f"Không chạy được {framework}: {exc}")
+    if rows:
+        output = pd.DataFrame(rows)
+        if len(rows) == 2:
+            st.caption(f"Chênh lệch dự đoán giữa hai model: $ {abs(rows[0]['prediction_usd'] - rows[1]['prediction_usd']):,.4f}")
         st.download_button("Tải kết quả CSV", output.to_csv(index=False).encode("utf-8-sig"), f"{TITLE.lower()}-forecast.csv", "text/csv")
-    except ValueError as exc:
-        st.error(str(exc))
 
-with st.expander("Đánh giá model trên dữ liệu kiểm thử"):
-    st.caption("Kết quả từ lần huấn luyện đã lưu; CSV bạn tải lên không làm thay đổi bảng đánh giá.")
-    st.dataframe(pd.read_csv(ROOT / "model/model_comparison.csv"), hide_index=True, width="stretch")
-    evaluation = pd.read_csv(ROOT / "model/test_predictions.csv")
-    evaluation = evaluation.loc[evaluation["group"] == group].copy()
+st.subheader("Tỉ lệ dự đoán đúng và so sánh model")
+st.caption("Đánh giá trên tập kiểm thử đã lưu của chuỗi đang chọn. CSV tải lên không làm thay đổi đánh giá này.")
+tolerance = st.slider("Ngưỡng sai số được coi là đúng (%)", min_value=1, max_value=30, value=5)
+st.caption("Một dự đoán được tính là đúng khi |dự đoán − thực tế| / |thực tế| × 100 ≤ ngưỡng. Đây là tỉ lệ trên dữ liệu lịch sử, không phải xác suất dự đoán tương lai đúng. Mẫu có giá thực tế bằng 0 được loại khỏi tỉ lệ và MAPE.")
+evaluation = pd.read_csv(ROOT / "model/test_predictions.csv")
+evaluation = evaluation.loc[evaluation["group"] == group].copy()
+if evaluation.empty:
+    st.info("Không có mẫu kiểm thử cho chuỗi đang chọn.")
+else:
+    scores = evaluation_metrics(evaluation, tolerance)
+    for (_, row), column in zip(scores.iterrows(), st.columns(2)):
+        column.metric(f"{row['Model']} · đúng trong ±{tolerance}%", f"{row['Đúng trong ngưỡng (%)']:.2f}%")
+        column.caption(f"{int(row['Mẫu tính tỉ lệ'])} mẫu kiểm thử có giá thực tế khác 0")
+    st.dataframe(scores, hide_index=True, width="stretch")
+    st.bar_chart(scores.set_index("Model")[["Đúng trong ngưỡng (%)"]])
     evaluation["Date"] = pd.to_datetime(evaluation["Date"])
-    st.line_chart(evaluation.set_index("Date")[["actual", "PyTorch RNN"]].rename(columns={"actual": "Thực tế", "PyTorch RNN": "Dự đoán"}))
-
+    st.line_chart(evaluation.set_index("Date")[["actual", "PyTorch RNN", "Keras RNN"]].rename(columns={"actual": "Thực tế"}))
+    st.download_button("Tải bảng so sánh CSV", scores.to_csv(index=False).encode("utf-8-sig"), f"{TITLE.lower()}-comparison.csv", "text/csv")
+with st.expander("Thông số đánh giá toàn bộ tập kiểm thử và huấn luyện"):
+    st.caption("MAE, RMSE, MAPE càng thấp càng tốt; R² càng cao càng tốt. Bảng này tính trên toàn bộ tập kiểm thử, gồm tất cả nhóm.")
+    st.dataframe(pd.read_csv(ROOT / "model/model_comparison.csv"), hide_index=True, width="stretch")

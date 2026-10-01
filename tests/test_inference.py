@@ -38,6 +38,26 @@ class InferenceTests(unittest.TestCase):
             actual = self.api.predict(window.tolist(), self.bundle, row["group"])
             self.assertAlmostEqual(actual, row["PyTorch RNN"], delta=1e-4)
 
+    def test_keras_checkpoint_predictions(self):
+        bundle = self.api.load_bundle("Keras")
+        saved = pd.read_csv(ROOT / "model/test_predictions.csv")
+        for _, row in saved.groupby("group").first().reset_index().iterrows():
+            frame = self.api.prepare_data(self.raw, self.meta, row["group"])
+            prices = frame.loc[frame.Date < pd.Timestamp(row.Date), self.meta["target"]].tail(self.meta["lookback"])
+            actual = self.api.predict(prices.tolist(), bundle, row["group"])
+            self.assertAlmostEqual(actual, row["Keras RNN"], delta=1e-4)
+        frame = self.api.prepare_data(self.raw, self.meta, self.group)
+        actual = self.api.predict(frame[self.meta["target"]].tail(self.meta["lookback"]).tolist(), bundle, self.group)
+        saved = pd.read_csv(ROOT / "model/next_step_forecast.csv")
+        self.assertAlmostEqual(actual, saved.loc[saved.Model == "Keras RNN", "Prediction (USD)"].iloc[0], delta=1e-4)
+
+    def test_accuracy_threshold_and_zero_actual(self):
+        data = pd.DataFrame({"actual": [100., 100., 0.], "PyTorch RNN": [104., 110., 2.], "Keras RNN": [100., 103., 0.]})
+        scores = self.api.evaluation_metrics(data, 5)
+        self.assertEqual(scores["Đúng trong ngưỡng (%)"].tolist(), [50., 100.])
+        self.assertEqual(scores["Mẫu tính tỉ lệ"].tolist(), [2, 2])
+        self.assertEqual(self.api.evaluation_metrics(data, 10)["Đúng trong ngưỡng (%)"].tolist(), [100., 100.])
+
     def test_invalid_prices(self):
         n = self.meta["lookback"]
         for values in [[1.]*(n-1), [-1.]*n, [float("nan")]*n, [float("inf")]*n, [True]*n]:

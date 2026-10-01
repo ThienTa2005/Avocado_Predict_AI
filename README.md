@@ -1,6 +1,6 @@
 # AVOCADO — Website dự đoán giá
 
-Website Streamlit độc lập, sử dụng model RNN PyTorch đã huấn luyện. Có sẵn dữ liệu mẫu, tải CSV, biểu đồ, dự đoán một bước và xuất kết quả CSV.
+Website Streamlit độc lập, sử dụng model RNN PyTorch và Keras đã huấn luyện. Có sẵn dữ liệu mẫu, tải CSV, biểu đồ, dự đoán một bước và xuất kết quả CSV.
 
 ## Đưa lên GitHub
 
@@ -73,3 +73,7 @@ docker run --rm -p 8501:8501 avocado-forecast
 
 Tham khảo: [Render Blueprints](https://render.com/docs/infrastructure-as-code), [Render Free](https://render.com/docs/free).
 
+
+## Chọn và so sánh model
+
+Chọn PyTorch, Keras hoặc So sánh cả hai ở thanh bên. Keras chạy bằng backend torch, không cần TensorFlow. Tỉ lệ dự đoán đúng là phần trăm mẫu kiểm thử có sai số tương đối trong ngưỡng chọn (mặc định 5%). Đây không phải xác suất dự báo tương lai đúng. Bảng và biểu đồ so sánh dùng cùng các mẫu kiểm thử của chuỗi đang chọn; có thể xuất CSV.

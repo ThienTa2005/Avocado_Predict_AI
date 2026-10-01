@@ -1,5 +1,6 @@
 """Inference uses exactly the architecture and saved scalers from the notebook."""
 import json
+import os
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -19,14 +20,21 @@ class VanillaRNN(nn.Module):
         sequence, _ = self.rnn(x)
         return self.head(self.dropout(sequence[:, -1, :]))
 
-def load_bundle():
+def load_bundle(framework="PyTorch"):
+    if framework not in ("PyTorch", "Keras"):
+        raise ValueError("Model không hợp lệ.")
     metadata = json.loads((ROOT / "model/metadata.json").read_text(encoding="utf-8"))
+    if framework == "Keras":
+        os.environ["KERAS_BACKEND"] = "torch"
+        import keras
+        model = keras.models.load_model(ROOT / "model/keras_best.keras", compile=False)
+        return {"model": model, "metadata": metadata, "framework": framework}
     cfg = metadata["config"]
     torch.set_num_threads(1)
     model = VanillaRNN(cfg["hidden"], cfg["dropout"])
     model.load_state_dict(torch.load(ROOT / "model/pytorch_best.pt", map_location="cpu", weights_only=True))
     model.eval()
-    return {"model": model, "metadata": metadata}
+    return {"model": model, "metadata": metadata, "framework": framework}
 
 def prepare_data(frame, metadata, group):
     if group not in metadata["scalers"]:
@@ -70,8 +78,32 @@ def predict(prices, bundle, group):
     scaler = metadata["scalers"][group]
     z = ((values - scaler["mean"]) / scaler["scale"]).astype(np.float32).reshape(1, -1, 1)
     with torch.inference_mode():
-        result = float(bundle["model"](torch.from_numpy(z)).item()) * scaler["scale"] + scaler["mean"]
+        if bundle.get("framework") == "Keras":
+            output = bundle["model"](z, training=False)
+            output = output.detach().cpu().numpy() if hasattr(output, "detach") else np.asarray(output)
+            normalized = float(output.reshape(-1)[0])
+        else:
+            normalized = float(bundle["model"](torch.from_numpy(z)).item())
+        result = normalized * scaler["scale"] + scaler["mean"]
     if not np.isfinite(result):
         raise ValueError("Model trả về giá trị không hữu hạn.")
     return result
 
+
+
+def evaluation_metrics(evaluation, tolerance_percent=5.0):
+    """Evaluate both models on the same saved holdout rows; exclude zero actuals from relative errors."""
+    actual = evaluation["actual"].to_numpy(dtype=float)
+    rows = []
+    for model in ("PyTorch RNN", "Keras RNN"):
+        predicted = evaluation[model].to_numpy(dtype=float)
+        valid = np.isfinite(actual) & np.isfinite(predicted)
+        a, p = actual[valid], predicted[valid]
+        error = np.abs(p - a)
+        relative = error[a != 0] / np.abs(a[a != 0]) * 100
+        rows.append({"Model": model, "Đúng trong ngưỡng (%)": float(np.mean(relative <= tolerance_percent) * 100) if len(relative) else np.nan,
+                     "MAE (USD)": float(np.mean(error)) if len(error) else np.nan,
+                     "RMSE (USD)": float(np.sqrt(np.mean(error ** 2))) if len(error) else np.nan,
+                     "MAPE (%)": float(np.mean(relative)) if len(relative) else np.nan,
+                     "Số mẫu": len(a), "Mẫu tính tỉ lệ": len(relative)})
+    return pd.DataFrame(rows)
