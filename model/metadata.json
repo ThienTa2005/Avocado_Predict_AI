@@ -1,0 +1,920 @@
+{
+  "dataset": "Avocado",
+  "target": "AveragePrice",
+  "lookback": 12,
+  "config": {
+    "seed": 42,
+    "hidden": 64,
+    "dropout": 0.2,
+    "lr": 0.001,
+    "batch_size": 64,
+    "max_epochs": 250,
+    "min_epochs": 30,
+    "patience": 25,
+    "lr_factor": 0.5,
+    "lr_patience": 5,
+    "clipnorm": 1.0,
+    "train_shuffle": false
+  },
+  "scalers": {
+    "[\"Albany\", \"conventional\"]": {
+      "mean": 1.318248175182482,
+      "scale": 0.20191744287590893,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Albany",
+      "type": "conventional"
+    },
+    "[\"Albany\", \"organic\"]": {
+      "mean": 1.821970802919708,
+      "scale": 0.1572939013767038,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Albany",
+      "type": "organic"
+    },
+    "[\"Atlanta\", \"conventional\"]": {
+      "mean": 1.0387591240875913,
+      "scale": 0.14306062854135945,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Atlanta",
+      "type": "conventional"
+    },
+    "[\"Atlanta\", \"organic\"]": {
+      "mean": 1.5435036496350365,
+      "scale": 0.3287969471701828,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Atlanta",
+      "type": "organic"
+    },
+    "[\"BaltimoreWashington\", \"conventional\"]": {
+      "mean": 1.324963503649635,
+      "scale": 0.2182382147472014,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "BaltimoreWashington",
+      "type": "conventional"
+    },
+    "[\"BaltimoreWashington\", \"organic\"]": {
+      "mean": 1.758759124087591,
+      "scale": 0.2513306057082108,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "BaltimoreWashington",
+      "type": "organic"
+    },
+    "[\"Boise\", \"conventional\"]": {
+      "mean": 1.0113868613138686,
+      "scale": 0.1935122262938059,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Boise",
+      "type": "conventional"
+    },
+    "[\"Boise\", \"organic\"]": {
+      "mean": 1.5124817518248175,
+      "scale": 0.3938408679010444,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Boise",
+      "type": "organic"
+    },
+    "[\"Boston\", \"conventional\"]": {
+      "mean": 1.272189781021898,
+      "scale": 0.214127717289544,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Boston",
+      "type": "conventional"
+    },
+    "[\"Boston\", \"organic\"]": {
+      "mean": 1.7543065693430655,
+      "scale": 0.27699849961499884,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Boston",
+      "type": "organic"
+    },
+    "[\"BuffaloRochester\", \"conventional\"]": {
+      "mean": 1.3965693430656934,
+      "scale": 0.1447294881963694,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "BuffaloRochester",
+      "type": "conventional"
+    },
+    "[\"BuffaloRochester\", \"organic\"]": {
+      "mean": 1.7353284671532847,
+      "scale": 0.27121529976138453,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "BuffaloRochester",
+      "type": "organic"
+    },
+    "[\"California\", \"conventional\"]": {
+      "mean": 1.0632116788321169,
+      "scale": 0.18694210160543284,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "California",
+      "type": "conventional"
+    },
+    "[\"California\", \"organic\"]": {
+      "mean": 1.6305109489051095,
+      "scale": 0.27432816718444797,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "California",
+      "type": "organic"
+    },
+    "[\"Charlotte\", \"conventional\"]": {
+      "mean": 1.2471532846715327,
+      "scale": 0.17694879008919062,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Charlotte",
+      "type": "conventional"
+    },
+    "[\"Charlotte\", \"organic\"]": {
+      "mean": 1.9030656934306567,
+      "scale": 0.23342752995901603,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Charlotte",
+      "type": "organic"
+    },
+    "[\"Chicago\", \"conventional\"]": {
+      "mean": 1.302116788321168,
+      "scale": 0.2760948495038106,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Chicago",
+      "type": "conventional"
+    },
+    "[\"Chicago\", \"organic\"]": {
+      "mean": 1.7289781021897808,
+      "scale": 0.2325274794891266,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Chicago",
+      "type": "organic"
+    },
+    "[\"CincinnatiDayton\", \"conventional\"]": {
+      "mean": 0.9636496350364965,
+      "scale": 0.15150763471118942,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "CincinnatiDayton",
+      "type": "conventional"
+    },
+    "[\"CincinnatiDayton\", \"organic\"]": {
+      "mean": 1.3193430656934306,
+      "scale": 0.30814776145523365,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "CincinnatiDayton",
+      "type": "organic"
+    },
+    "[\"Columbus\", \"conventional\"]": {
+      "mean": 1.04,
+      "scale": 0.14196226495633565,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Columbus",
+      "type": "conventional"
+    },
+    "[\"Columbus\", \"organic\"]": {
+      "mean": 1.401897810218978,
+      "scale": 0.29519394304389684,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Columbus",
+      "type": "organic"
+    },
+    "[\"DallasFtWorth\", \"conventional\"]": {
+      "mean": 0.8186861313868613,
+      "scale": 0.1026852431010769,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "DallasFtWorth",
+      "type": "conventional"
+    },
+    "[\"DallasFtWorth\", \"organic\"]": {
+      "mean": 1.2674452554744524,
+      "scale": 0.1643213390813545,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "DallasFtWorth",
+      "type": "organic"
+    },
+    "[\"Denver\", \"conventional\"]": {
+      "mean": 1.0461313868613138,
+      "scale": 0.18060825120056462,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Denver",
+      "type": "conventional"
+    },
+    "[\"Denver\", \"organic\"]": {
+      "mean": 1.277153284671533,
+      "scale": 0.3098644603743378,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Denver",
+      "type": "organic"
+    },
+    "[\"Detroit\", \"conventional\"]": {
+      "mean": 1.0935766423357665,
+      "scale": 0.16962275543820385,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Detroit",
+      "type": "conventional"
+    },
+    "[\"Detroit\", \"organic\"]": {
+      "mean": 1.4145985401459855,
+      "scale": 0.34185414271057146,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Detroit",
+      "type": "organic"
+    },
+    "[\"GrandRapids\", \"conventional\"]": {
+      "mean": 1.2671532846715328,
+      "scale": 0.284653583562892,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "GrandRapids",
+      "type": "conventional"
+    },
+    "[\"GrandRapids\", \"organic\"]": {
+      "mean": 1.7714598540145985,
+      "scale": 0.302072017675839,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "GrandRapids",
+      "type": "organic"
+    },
+    "[\"GreatLakes\", \"conventional\"]": {
+      "mean": 1.1386131386861313,
+      "scale": 0.15671435953450222,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "GreatLakes",
+      "type": "conventional"
+    },
+    "[\"GreatLakes\", \"organic\"]": {
+      "mean": 1.4816788321167884,
+      "scale": 0.19315501638539037,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "GreatLakes",
+      "type": "organic"
+    },
+    "[\"HarrisburgScranton\", \"conventional\"]": {
+      "mean": 1.2416788321167884,
+      "scale": 0.1535828521405588,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "HarrisburgScranton",
+      "type": "conventional"
+    },
+    "[\"HarrisburgScranton\", \"organic\"]": {
+      "mean": 1.827591240875912,
+      "scale": 0.19842638432494414,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "HarrisburgScranton",
+      "type": "organic"
+    },
+    "[\"HartfordSpringfield\", \"conventional\"]": {
+      "mean": 1.391897810218978,
+      "scale": 0.22685901228529334,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "HartfordSpringfield",
+      "type": "conventional"
+    },
+    "[\"HartfordSpringfield\", \"organic\"]": {
+      "mean": 2.2875912408759125,
+      "scale": 0.20316303742879102,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "HartfordSpringfield",
+      "type": "organic"
+    },
+    "[\"Houston\", \"conventional\"]": {
+      "mean": 0.802043795620438,
+      "scale": 0.1142869910799948,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Houston",
+      "type": "conventional"
+    },
+    "[\"Houston\", \"organic\"]": {
+      "mean": 1.1978832116788318,
+      "scale": 0.18748208929320023,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Houston",
+      "type": "organic"
+    },
+    "[\"Indianapolis\", \"conventional\"]": {
+      "mean": 1.1105839416058392,
+      "scale": 0.15098105659372363,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Indianapolis",
+      "type": "conventional"
+    },
+    "[\"Indianapolis\", \"organic\"]": {
+      "mean": 1.484744525547445,
+      "scale": 0.25378328674405315,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Indianapolis",
+      "type": "organic"
+    },
+    "[\"Jacksonville\", \"conventional\"]": {
+      "mean": 1.1494160583941606,
+      "scale": 0.21319524796938252,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Jacksonville",
+      "type": "conventional"
+    },
+    "[\"Jacksonville\", \"organic\"]": {
+      "mean": 1.7897080291970804,
+      "scale": 0.2533626165853543,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Jacksonville",
+      "type": "organic"
+    },
+    "[\"LasVegas\", \"conventional\"]": {
+      "mean": 0.9663503649635038,
+      "scale": 0.1266633904120276,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "LasVegas",
+      "type": "conventional"
+    },
+    "[\"LasVegas\", \"organic\"]": {
+      "mean": 1.7053284671532847,
+      "scale": 0.38449901254681423,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "LasVegas",
+      "type": "organic"
+    },
+    "[\"LosAngeles\", \"conventional\"]": {
+      "mean": 0.9167153284671531,
+      "scale": 0.17597739357573638,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "LosAngeles",
+      "type": "conventional"
+    },
+    "[\"LosAngeles\", \"organic\"]": {
+      "mean": 1.3543065693430658,
+      "scale": 0.26372346615191355,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "LosAngeles",
+      "type": "organic"
+    },
+    "[\"Louisville\", \"conventional\"]": {
+      "mean": 1.060948905109489,
+      "scale": 0.14503401670798077,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Louisville",
+      "type": "conventional"
+    },
+    "[\"Louisville\", \"organic\"]": {
+      "mean": 1.4170072992700729,
+      "scale": 0.28619926946889795,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Louisville",
+      "type": "organic"
+    },
+    "[\"MiamiFtLauderdale\", \"conventional\"]": {
+      "mean": 1.212043795620438,
+      "scale": 0.21955541902569717,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "MiamiFtLauderdale",
+      "type": "conventional"
+    },
+    "[\"MiamiFtLauderdale\", \"organic\"]": {
+      "mean": 1.5889051094890512,
+      "scale": 0.32447752237811117,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "MiamiFtLauderdale",
+      "type": "organic"
+    },
+    "[\"Midsouth\", \"conventional\"]": {
+      "mean": 1.183065693430657,
+      "scale": 0.13280006399938887,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Midsouth",
+      "type": "conventional"
+    },
+    "[\"Midsouth\", \"organic\"]": {
+      "mean": 1.5703649635036496,
+      "scale": 0.17106966506453047,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Midsouth",
+      "type": "organic"
+    },
+    "[\"Nashville\", \"conventional\"]": {
+      "mean": 0.9852554744525549,
+      "scale": 0.12470742572948158,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Nashville",
+      "type": "conventional"
+    },
+    "[\"Nashville\", \"organic\"]": {
+      "mean": 1.3425547445255475,
+      "scale": 0.30854267576700034,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Nashville",
+      "type": "organic"
+    },
+    "[\"NewOrleansMobile\", \"conventional\"]": {
+      "mean": 1.0552554744525546,
+      "scale": 0.18844380095844335,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "NewOrleansMobile",
+      "type": "conventional"
+    },
+    "[\"NewOrleansMobile\", \"organic\"]": {
+      "mean": 1.5280291970802917,
+      "scale": 0.2047531517758128,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "NewOrleansMobile",
+      "type": "organic"
+    },
+    "[\"NewYork\", \"conventional\"]": {
+      "mean": 1.3867153284671534,
+      "scale": 0.247239089015675,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "NewYork",
+      "type": "conventional"
+    },
+    "[\"NewYork\", \"organic\"]": {
+      "mean": 2.0832116788321167,
+      "scale": 0.20537640112967495,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "NewYork",
+      "type": "organic"
+    },
+    "[\"Northeast\", \"conventional\"]": {
+      "mean": 1.3265693430656935,
+      "scale": 0.19080481851405529,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Northeast",
+      "type": "conventional"
+    },
+    "[\"Northeast\", \"organic\"]": {
+      "mean": 1.8953284671532844,
+      "scale": 0.15759622756096034,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Northeast",
+      "type": "organic"
+    },
+    "[\"NorthernNewEngland\", \"conventional\"]": {
+      "mean": 1.2237956204379559,
+      "scale": 0.17992346867309886,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "NorthernNewEngland",
+      "type": "conventional"
+    },
+    "[\"NorthernNewEngland\", \"organic\"]": {
+      "mean": 1.7094160583941607,
+      "scale": 0.2100947524275712,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "NorthernNewEngland",
+      "type": "organic"
+    },
+    "[\"Orlando\", \"conventional\"]": {
+      "mean": 1.1744525547445255,
+      "scale": 0.2016425966903884,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Orlando",
+      "type": "conventional"
+    },
+    "[\"Orlando\", \"organic\"]": {
+      "mean": 1.7816788321167882,
+      "scale": 0.2554474229705316,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Orlando",
+      "type": "organic"
+    },
+    "[\"Philadelphia\", \"conventional\"]": {
+      "mean": 1.39029197080292,
+      "scale": 0.20418948408276208,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Philadelphia",
+      "type": "conventional"
+    },
+    "[\"Philadelphia\", \"organic\"]": {
+      "mean": 1.9201459854014595,
+      "scale": 0.22311656277845618,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Philadelphia",
+      "type": "organic"
+    },
+    "[\"PhoenixTucson\", \"conventional\"]": {
+      "mean": 0.696934306569343,
+      "scale": 0.14033620758316695,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "PhoenixTucson",
+      "type": "conventional"
+    },
+    "[\"PhoenixTucson\", \"organic\"]": {
+      "mean": 1.7131386861313869,
+      "scale": 0.2943699242432958,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "PhoenixTucson",
+      "type": "organic"
+    },
+    "[\"Pittsburgh\", \"conventional\"]": {
+      "mean": 1.2462043795620437,
+      "scale": 0.1413445930887276,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Pittsburgh",
+      "type": "conventional"
+    },
+    "[\"Pittsburgh\", \"organic\"]": {
+      "mean": 1.4945255474452555,
+      "scale": 0.1190839169423619,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Pittsburgh",
+      "type": "organic"
+    },
+    "[\"Plains\", \"conventional\"]": {
+      "mean": 1.1323357664233575,
+      "scale": 0.16100171270668392,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Plains",
+      "type": "conventional"
+    },
+    "[\"Plains\", \"organic\"]": {
+      "mean": 1.6862043795620438,
+      "scale": 0.14925670527118934,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Plains",
+      "type": "organic"
+    },
+    "[\"Portland\", \"conventional\"]": {
+      "mean": 0.985912408759124,
+      "scale": 0.17782364241637577,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Portland",
+      "type": "conventional"
+    },
+    "[\"Portland\", \"organic\"]": {
+      "mean": 1.483065693430657,
+      "scale": 0.38487567818085894,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Portland",
+      "type": "organic"
+    },
+    "[\"RaleighGreensboro\", \"conventional\"]": {
+      "mean": 1.203065693430657,
+      "scale": 0.13891425724832898,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "RaleighGreensboro",
+      "type": "conventional"
+    },
+    "[\"RaleighGreensboro\", \"organic\"]": {
+      "mean": 1.8017518248175182,
+      "scale": 0.26673450484201017,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "RaleighGreensboro",
+      "type": "organic"
+    },
+    "[\"RichmondNorfolk\", \"conventional\"]": {
+      "mean": 1.0973722627737224,
+      "scale": 0.11701437975762781,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "RichmondNorfolk",
+      "type": "conventional"
+    },
+    "[\"RichmondNorfolk\", \"organic\"]": {
+      "mean": 1.4427007299270072,
+      "scale": 0.22720293398445812,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "RichmondNorfolk",
+      "type": "organic"
+    },
+    "[\"Roanoke\", \"conventional\"]": {
+      "mean": 1.0757664233576643,
+      "scale": 0.10841743218936747,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Roanoke",
+      "type": "conventional"
+    },
+    "[\"Roanoke\", \"organic\"]": {
+      "mean": 1.3373722627737226,
+      "scale": 0.27680204545727694,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Roanoke",
+      "type": "organic"
+    },
+    "[\"Sacramento\", \"conventional\"]": {
+      "mean": 1.254014598540146,
+      "scale": 0.1961805360034238,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Sacramento",
+      "type": "conventional"
+    },
+    "[\"Sacramento\", \"organic\"]": {
+      "mean": 1.9991970802919707,
+      "scale": 0.34143548063540613,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Sacramento",
+      "type": "organic"
+    },
+    "[\"SanDiego\", \"conventional\"]": {
+      "mean": 1.0088321167883212,
+      "scale": 0.197639595656922,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "SanDiego",
+      "type": "conventional"
+    },
+    "[\"SanDiego\", \"organic\"]": {
+      "mean": 1.6697810218978104,
+      "scale": 0.3444735052862719,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "SanDiego",
+      "type": "organic"
+    },
+    "[\"SanFrancisco\", \"conventional\"]": {
+      "mean": 1.3927007299270073,
+      "scale": 0.2803504158957105,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "SanFrancisco",
+      "type": "conventional"
+    },
+    "[\"SanFrancisco\", \"organic\"]": {
+      "mean": 2.2486131386861308,
+      "scale": 0.4890989517928792,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "SanFrancisco",
+      "type": "organic"
+    },
+    "[\"Seattle\", \"conventional\"]": {
+      "mean": 1.0894890510948905,
+      "scale": 0.196470020253024,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Seattle",
+      "type": "conventional"
+    },
+    "[\"Seattle\", \"organic\"]": {
+      "mean": 1.6485401459854014,
+      "scale": 0.3969124269479001,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Seattle",
+      "type": "organic"
+    },
+    "[\"SouthCarolina\", \"conventional\"]": {
+      "mean": 1.1175182481751826,
+      "scale": 0.15078278000917766,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "SouthCarolina",
+      "type": "conventional"
+    },
+    "[\"SouthCarolina\", \"organic\"]": {
+      "mean": 1.6685401459854015,
+      "scale": 0.22518618459258452,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "SouthCarolina",
+      "type": "organic"
+    },
+    "[\"SouthCentral\", \"conventional\"]": {
+      "mean": 0.843065693430657,
+      "scale": 0.10406737040102142,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "SouthCentral",
+      "type": "conventional"
+    },
+    "[\"SouthCentral\", \"organic\"]": {
+      "mean": 1.2796350364963505,
+      "scale": 0.15861355856995626,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "SouthCentral",
+      "type": "organic"
+    },
+    "[\"Southeast\", \"conventional\"]": {
+      "mean": 1.1259124087591241,
+      "scale": 0.17650936057776126,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Southeast",
+      "type": "conventional"
+    },
+    "[\"Southeast\", \"organic\"]": {
+      "mean": 1.6132116788321167,
+      "scale": 0.19524618301107244,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Southeast",
+      "type": "organic"
+    },
+    "[\"Spokane\", \"conventional\"]": {
+      "mean": 1.0609489051094891,
+      "scale": 0.16598691009720837,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Spokane",
+      "type": "conventional"
+    },
+    "[\"Spokane\", \"organic\"]": {
+      "mean": 1.6869343065693432,
+      "scale": 0.39767859605134126,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Spokane",
+      "type": "organic"
+    },
+    "[\"StLouis\", \"conventional\"]": {
+      "mean": 1.1399270072992702,
+      "scale": 0.1795553971827834,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "StLouis",
+      "type": "conventional"
+    },
+    "[\"StLouis\", \"organic\"]": {
+      "mean": 1.6035036496350366,
+      "scale": 0.40031300024088984,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "StLouis",
+      "type": "organic"
+    },
+    "[\"Syracuse\", \"conventional\"]": {
+      "mean": 1.3921167883211678,
+      "scale": 0.12844056626011102,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Syracuse",
+      "type": "conventional"
+    },
+    "[\"Syracuse\", \"organic\"]": {
+      "mean": 1.731897810218978,
+      "scale": 0.22973336765516442,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Syracuse",
+      "type": "organic"
+    },
+    "[\"Tampa\", \"conventional\"]": {
+      "mean": 1.1574452554744525,
+      "scale": 0.21504041106242855,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Tampa",
+      "type": "conventional"
+    },
+    "[\"Tampa\", \"organic\"]": {
+      "mean": 1.6021167883211678,
+      "scale": 0.2928725854770154,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "Tampa",
+      "type": "organic"
+    },
+    "[\"TotalUS\", \"conventional\"]": {
+      "mean": 1.0578832116788321,
+      "scale": 0.1370887647700623,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "TotalUS",
+      "type": "conventional"
+    },
+    "[\"TotalUS\", \"organic\"]": {
+      "mean": 1.5049635036496352,
+      "scale": 0.18220916867646433,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "TotalUS",
+      "type": "organic"
+    },
+    "[\"West\", \"conventional\"]": {
+      "mean": 0.9445985401459853,
+      "scale": 0.12785721163552682,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "West",
+      "type": "conventional"
+    },
+    "[\"West\", \"organic\"]": {
+      "mean": 1.4822627737226277,
+      "scale": 0.28940410133527605,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "West",
+      "type": "organic"
+    },
+    "[\"WestTexNewMexico\", \"conventional\"]": {
+      "mean": 0.8138686131386861,
+      "scale": 0.10350956918408634,
+      "fit_rows": 137,
+      "fit_last_date": "2017-08-13",
+      "region": "WestTexNewMexico",
+      "type": "conventional"
+    },
+    "[\"WestTexNewMexico\", \"organic\"]": {
+      "mean": 1.6474814814814815,
+      "scale": 0.3411803444438765,
+      "fit_rows": 135,
+      "fit_last_date": "2017-08-20",
+      "region": "WestTexNewMexico",
+      "type": "organic"
+    }
+  },
+  "versions": {
+    "python": "3.13.5",
+    "numpy": "2.3.1",
+    "pandas": "2.3.1",
+    "scikit-learn": "1.9.0",
+    "torch": "2.8.0",
+    "tensorflow": "2.20.0rc0",
+    "keras": "3.11.1"
+  },
+  "csv_sha256": "a608b8513343e063a3d7440d863f94a73f99084b3c24205cafb8d02792653cc9",
+  "training": {
+    "pytorch": {
+      "epochs": 30,
+      "train_seconds": 32.39439189992845,
+      "best_val_loss": 0.7875733983675455,
+      "best_epoch": 2,
+      "device": "cpu",
+      "parameters": 4353,
+      "checkpoint_reload_checked": true
+    },
+    "keras": {
+      "epochs": 30,
+      "train_seconds": 20.509645099984482,
+      "best_val_loss": 0.7761107683181763,
+      "best_epoch": 2,
+      "device": "[LogicalDevice(name='/device:CPU:0', device_type='CPU')]",
+      "parameters": 4289,
+      "checkpoint_reload_checked": true
+    }
+  },
+  "runtime_threads": {
+    "OMP_NUM_THREADS": null,
+    "TF_NUM_INTRAOP_THREADS": null,
+    "TF_NUM_INTEROP_THREADS": null
+  }
+}

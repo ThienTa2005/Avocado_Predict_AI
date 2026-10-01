@@ -1,0 +1,62 @@
+import importlib.util
+import json
+from pathlib import Path
+import sys
+import unittest
+import numpy as np
+import pandas as pd
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+class InferenceTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if importlib.util.find_spec("inference") is not None:
+            import inference
+            cls.api = inference
+            cls.bundle = inference.load_bundle()
+            cls.meta = cls.bundle["metadata"]
+            cls.raw = pd.read_csv(ROOT / "data" / "prices.csv")
+            cls.group = "AMZN" if cls.meta["target"] == "Close" else json.dumps(["TotalUS", "conventional"])
+
+    def setUp(self):
+        self.assertTrue(hasattr(self, "api"), "inference module must exist")
+
+    def test_saved_forecast(self):
+        frame = self.api.prepare_data(self.raw, self.meta, self.group)
+        actual = self.api.predict(frame[self.meta["target"]].tail(self.meta["lookback"]).tolist(), self.bundle, self.group)
+        saved = pd.read_csv(ROOT / "model" / "next_step_forecast.csv")
+        expected = saved.loc[saved.Model == "PyTorch RNN", "Prediction (USD)"].iloc[0]
+        self.assertAlmostEqual(actual, expected, delta=1e-4)
+
+    def test_historical_predictions(self):
+        saved = pd.read_csv(ROOT / "model" / "test_predictions.csv")
+        for _, row in saved.groupby("group").first().reset_index().iterrows():
+            frame = self.api.prepare_data(self.raw, self.meta, row["group"])
+            window = frame.loc[frame.Date < pd.Timestamp(row.Date), self.meta["target"]].tail(self.meta["lookback"])
+            actual = self.api.predict(window.tolist(), self.bundle, row["group"])
+            self.assertAlmostEqual(actual, row["PyTorch RNN"], delta=1e-4)
+
+    def test_invalid_prices(self):
+        n = self.meta["lookback"]
+        for values in [[1.]*(n-1), [-1.]*n, [float("nan")]*n, [float("inf")]*n, [True]*n]:
+            with self.subTest(values=values[:1]):
+                with self.assertRaises(ValueError):
+                    self.api.predict(values, self.bundle, self.group)
+        with self.assertRaises(ValueError):
+            self.api.predict([1.]*n, self.bundle, "unknown")
+
+    def test_csv_validation_and_sorting(self):
+        frame = self.api.prepare_data(self.raw, self.meta, self.group)
+        self.assertTrue(frame.Date.is_monotonic_increasing)
+        for bad in [self.raw.drop(columns=["Date"]), pd.concat([self.raw, self.raw]), self.raw.assign(Date="bad"),
+                    self.raw.assign(**{self.meta["target"]: -1})]:
+            with self.assertRaises(ValueError):
+                self.api.prepare_data(bad, self.meta, self.group)
+        with self.assertRaises(ValueError):
+            self.api.prepare_data(frame.head(2), self.meta, self.group)
+
+if __name__ == "__main__":
+    unittest.main()
+

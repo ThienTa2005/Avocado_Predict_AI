@@ -1,0 +1,3 @@
+Model,Prediction (USD),Last observed (USD)
+PyTorch RNN,1.0550442168848548,1.03
+Keras RNN,1.0521890907538431,1.03
