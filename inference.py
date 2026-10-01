@@ -20,18 +20,32 @@ class VanillaRNN(nn.Module):
         sequence, _ = self.rnn(x)
         return self.head(self.dropout(sequence[:, -1, :]))
 
+class LSTMModel(nn.Module):
+    def __init__(self, hidden, dropout):
+        super().__init__()
+        self.rnn = nn.LSTM(1, hidden, num_layers=1, batch_first=True)
+        self.dropout = nn.Dropout(dropout)
+        self.head = nn.Linear(hidden, 1)
+
+    def forward(self, x):
+        sequence, _ = self.rnn(x)
+        return self.head(self.dropout(sequence[:, -1, :]))
+
+
 def model_directory(variant="price"):
-    if variant not in ("price", "log_return"):
+    if variant not in ("price", "log_return", "lstm"):
         raise ValueError("Cách dự đoán không hợp lệ.")
-    folder = ROOT / ("model" if variant == "price" else "model/log_return")
+    folder = ROOT / {"price": "model", "log_return": "model/log_return", "lstm": "model/lstm"}[variant]
     required = ["metadata.json", "pytorch_best.pt", "keras_best.keras",
                 "test_predictions.csv", "model_comparison.csv"]
     if not all((folder / name).is_file() for name in required):
-        raise FileNotFoundError("Chưa có đủ model log return đã huấn luyện cho website này.")
+        raise FileNotFoundError("Chưa có đủ model " + ("LSTM" if variant == "lstm" else variant) + " đã huấn luyện. Hãy chạy notebook tương ứng và chép checkpoint vào website.")
     metadata = json.loads((folder / "metadata.json").read_text(encoding="utf-8"))
     transform = metadata.get("target_transform", "price")
-    if transform != variant:
+    if transform != ("price" if variant == "lstm" else variant):
         raise ValueError("Checkpoint và cách xử lý dữ liệu không khớp.")
+    if metadata.get("architecture", "rnn") != ("lstm" if variant == "lstm" else "rnn"):
+        raise ValueError("Kiến trúc checkpoint không khớp lựa chọn.")
     if variant == "log_return":
         if metadata.get("input_transform") != "log_return" or metadata.get("sequence_length") != metadata["lookback"] - 1:
             raise ValueError("Cấu hình cửa sổ log return không hợp lệ.")
@@ -50,7 +64,8 @@ def load_bundle(framework="PyTorch", variant="price"):
         return {"model": model, "metadata": metadata, "framework": framework}
     cfg = metadata["config"]
     torch.set_num_threads(1)
-    model = VanillaRNN(cfg["hidden"], cfg["dropout"])
+    model_class = LSTMModel if variant == "lstm" else VanillaRNN
+    model = model_class(cfg["hidden"], cfg["dropout"])
     model.load_state_dict(torch.load(folder / "pytorch_best.pt", map_location="cpu", weights_only=True))
     model.eval()
     return {"model": model, "metadata": metadata, "framework": framework}
@@ -121,11 +136,11 @@ def predict(prices, bundle, group):
 
 
 
-def evaluation_metrics(evaluation, tolerance_percent=5.0):
+def evaluation_metrics(evaluation, tolerance_percent=5.0, architecture="RNN"):
     """Evaluate both models on the same saved holdout rows; exclude zero actuals from relative errors."""
     actual = evaluation["actual"].to_numpy(dtype=float)
     rows = []
-    for model in ("PyTorch RNN", "Keras RNN"):
+    for model in (f"PyTorch {architecture}", f"Keras {architecture}"):
         predicted = evaluation[model].to_numpy(dtype=float)
         valid = np.isfinite(actual) & np.isfinite(predicted)
         a, p = actual[valid], predicted[valid]

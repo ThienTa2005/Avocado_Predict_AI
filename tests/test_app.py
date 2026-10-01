@@ -49,3 +49,15 @@ class AppTests(unittest.TestCase):
         app.button[0].click().run()
         self.assertEqual(len(app.exception), 0)
         self.assertEqual(len(app.error), 0)
+
+    def test_lstm_waits_for_checkpoint(self):
+        app = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run()
+        next(r for r in app.radio if r.label == "Kiến trúc").set_value("LSTM").run()
+        self.assertEqual(len(app.exception), 0)
+        if not (ROOT / "model/lstm/metadata.json").exists():
+            self.assertTrue(any("LSTM" in item.value and "Chưa có" in item.value for item in app.info))
+            self.assertFalse(app.button)
+        next(r for r in app.radio if r.label == "Kiến trúc").set_value("RNN").run()
+        app.button[0].click().run()
+        self.assertEqual(len(app.exception), 0)
+        self.assertEqual(len(app.error), 0)

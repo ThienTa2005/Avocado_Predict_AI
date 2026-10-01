@@ -1,0 +1,3 @@
+Model,Prediction (USD),Last observed (USD)
+PyTorch LSTM,1.047467605646922,1.03
+Keras LSTM,1.0475237208624655,1.03

@@ -87,3 +87,7 @@ Model giá trực tiếp nằm trong `model/`. Model log return nằm trong `mod
 Sau khi chạy notebook log return tương ứng, chép các file sau từ thư mục lần chạy trong `artifacts/` vào `model/log_return/`:
 `metadata.json`, `pytorch_best.pt`, `keras_best.keras`, `test_predictions.csv`, `model_comparison.csv`, `next_step_forecast.csv`.
 Khởi động lại website sau khi thay checkpoint. Nếu chưa đủ file, lựa chọn Log return hiển thị thông báo chưa có model.
+
+## LSTM
+
+Chọn **Kiến trúc → LSTM** rồi chọn PyTorch, Keras hoặc so sánh cả hai. LSTM dùng giá trực tiếp. Chạy notebook LSTM tương ứng đến cell cuối để xuất checkpoint vào model/lstm/, rồi khởi động lại website. Trước khi có checkpoint, website hiển thị thông báo chưa có model.
