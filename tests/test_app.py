@@ -31,3 +31,21 @@ class AppTests(unittest.TestCase):
             self.assertEqual(len(forecasts), 2 if choice == "So sánh cả hai" else 1)
         app.slider[0].set_value(10).run()
         self.assertTrue(any("±10%" in m.label for m in app.metric))
+
+    def test_log_return_choice(self):
+        app = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run()
+        next(r for r in app.radio if r.label == "Cách dự đoán").set_value("Log return").run()
+        self.assertEqual(len(app.exception), 0)
+        if not (ROOT / "model/log_return/metadata.json").exists():
+            self.assertTrue(any("Chưa có" in item.value for item in app.info))
+            return
+        for choice in ["PyTorch", "Keras", "So sánh cả hai"]:
+            app.selectbox[0].set_value(choice).run()
+            app.button[0].click().run()
+            self.assertEqual(len(app.exception), 0)
+            self.assertEqual(len(app.error), 0)
+            self.assertTrue(any(m.label.startswith("Giá dự đoán") for m in app.metric))
+        next(r for r in app.radio if r.label == "Cách dự đoán").set_value("Giá trực tiếp").run()
+        app.button[0].click().run()
+        self.assertEqual(len(app.exception), 0)
+        self.assertEqual(len(app.error), 0)

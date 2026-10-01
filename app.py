@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 import pandas as pd
 import streamlit as st
-from inference import load_bundle, prepare_data, predict, evaluation_metrics
+from inference import load_bundle, prepare_data, predict, evaluation_metrics, model_directory
 
 ROOT = Path(__file__).resolve().parent
 IS_AVOCADO = json.loads((ROOT / "model/metadata.json").read_text(encoding="utf-8"))["target"] == "AveragePrice"
@@ -10,8 +10,8 @@ TITLE = "Avocado" if IS_AVOCADO else "AMZN"
 st.set_page_config(page_title=f"{TITLE} · Dự đoán giá", page_icon="🥑" if IS_AVOCADO else "📈", layout="wide")
 
 @st.cache_resource
-def cached_bundle(framework="PyTorch"):
-    return load_bundle(framework)
+def cached_bundle(framework="PyTorch", variant="price"):
+    return load_bundle(framework, variant)
 
 @st.cache_data
 def read_sample():
@@ -28,6 +28,18 @@ lookback = metadata["lookback"]
 with st.sidebar:
     st.header("Dữ liệu dự đoán")
     selected_model = st.selectbox("Model dự đoán", ["PyTorch", "Keras", "So sánh cả hai"])
+    method = st.radio("Cách dự đoán", ["Giá trực tiếp", "Log return"], key="prediction_method")
+    variant = "log_return" if method == "Log return" else "price"
+    try:
+        model_dir = model_directory(variant)
+        metadata = json.loads((model_dir / "metadata.json").read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError) as exc:
+        st.info(str(exc))
+        st.stop()
+    target = metadata["target"]
+    lookback = metadata["lookback"]
+    if variant == "log_return":
+        st.caption("Model học biến động tương đối và trả kết quả theo USD. CSV vẫn chứa giá gốc.")
     source = st.radio("Nguồn dữ liệu", ["Dữ liệu mẫu", "Tải CSV"])
     group = "AMZN"
     if IS_AVOCADO:
@@ -79,11 +91,11 @@ if st.button("Dự đoán bước tiếp theo", type="primary"):
     for framework, column in zip(frameworks, st.columns(len(frameworks))):
         try:
             with st.spinner(f"Đang dự đoán bằng {framework}..."):
-                result = predict(window[target].tolist(), cached_bundle(framework), group)
+                result = predict(window[target].tolist(), cached_bundle(framework, variant), group)
             column.metric("Giá dự đoán" if len(frameworks) == 1 else f"Giá dự đoán · {framework}",
                           f"$ {result:,.4f}", f"{result-last:+.4f} USD so với giá cuối")
-            column.caption(horizon + f" · {framework} RNN")
-            rows.append({"model": framework + " RNN", "group": group,
+            column.caption(horizon + f" · {framework} RNN · {method}")
+            rows.append({"model": framework + " RNN", "method": variant, "group": group,
                          "last_observed_date": window.Date.iloc[-1].date(),
                          "last_price_usd": last, "prediction_usd": result, "horizon": horizon})
         except Exception as exc:
@@ -92,18 +104,19 @@ if st.button("Dự đoán bước tiếp theo", type="primary"):
         output = pd.DataFrame(rows)
         if len(rows) == 2:
             st.caption(f"Chênh lệch dự đoán giữa hai model: $ {abs(rows[0]['prediction_usd'] - rows[1]['prediction_usd']):,.4f}")
-        st.download_button("Tải kết quả CSV", output.to_csv(index=False).encode("utf-8-sig"), f"{TITLE.lower()}-forecast.csv", "text/csv")
+        st.download_button("Tải kết quả CSV", output.to_csv(index=False).encode("utf-8-sig"), f"{TITLE.lower()}-{variant}-forecast.csv", "text/csv")
 
-st.subheader("Tỉ lệ dự đoán đúng và so sánh model")
+st.subheader("Tỉ lệ dự đoán đúng và so sánh model · " + method)
 st.caption("Đánh giá trên tập kiểm thử đã lưu của chuỗi đang chọn. CSV tải lên không làm thay đổi đánh giá này.")
 tolerance = st.slider("Ngưỡng sai số được coi là đúng (%)", min_value=1, max_value=30, value=5)
 st.caption("Một dự đoán được tính là đúng khi |dự đoán − thực tế| / |thực tế| × 100 ≤ ngưỡng. Đây là tỉ lệ trên dữ liệu lịch sử, không phải xác suất dự đoán tương lai đúng. Mẫu có giá thực tế bằng 0 được loại khỏi tỉ lệ và MAPE.")
-evaluation = pd.read_csv(ROOT / "model/test_predictions.csv")
+evaluation = pd.read_csv(model_dir / "test_predictions.csv")
 evaluation = evaluation.loc[evaluation["group"] == group].copy()
 if evaluation.empty:
     st.info("Không có mẫu kiểm thử cho chuỗi đang chọn.")
 else:
     scores = evaluation_metrics(evaluation, tolerance)
+    scores["Cách dự đoán"] = method
     for (_, row), column in zip(scores.iterrows(), st.columns(2)):
         column.metric(f"{row['Model']} · đúng trong ±{tolerance}%", f"{row['Đúng trong ngưỡng (%)']:.2f}%")
         column.caption(f"{int(row['Mẫu tính tỉ lệ'])} mẫu kiểm thử có giá thực tế khác 0")
@@ -111,7 +124,7 @@ else:
     st.bar_chart(scores.set_index("Model")[["Đúng trong ngưỡng (%)"]])
     evaluation["Date"] = pd.to_datetime(evaluation["Date"])
     st.line_chart(evaluation.set_index("Date")[["actual", "PyTorch RNN", "Keras RNN"]].rename(columns={"actual": "Thực tế"}))
-    st.download_button("Tải bảng so sánh CSV", scores.to_csv(index=False).encode("utf-8-sig"), f"{TITLE.lower()}-comparison.csv", "text/csv")
+    st.download_button("Tải bảng so sánh CSV", scores.to_csv(index=False).encode("utf-8-sig"), f"{TITLE.lower()}-{variant}-comparison.csv", "text/csv")
 with st.expander("Thông số đánh giá toàn bộ tập kiểm thử và huấn luyện"):
     st.caption("MAE, RMSE, MAPE càng thấp càng tốt; R² càng cao càng tốt. Bảng này tính trên toàn bộ tập kiểm thử, gồm tất cả nhóm.")
-    st.dataframe(pd.read_csv(ROOT / "model/model_comparison.csv"), hide_index=True, width="stretch")
+    st.dataframe(pd.read_csv(model_dir / "model_comparison.csv"), hide_index=True, width="stretch")

@@ -20,19 +20,38 @@ class VanillaRNN(nn.Module):
         sequence, _ = self.rnn(x)
         return self.head(self.dropout(sequence[:, -1, :]))
 
-def load_bundle(framework="PyTorch"):
+def model_directory(variant="price"):
+    if variant not in ("price", "log_return"):
+        raise ValueError("Cách dự đoán không hợp lệ.")
+    folder = ROOT / ("model" if variant == "price" else "model/log_return")
+    required = ["metadata.json", "pytorch_best.pt", "keras_best.keras",
+                "test_predictions.csv", "model_comparison.csv"]
+    if not all((folder / name).is_file() for name in required):
+        raise FileNotFoundError("Chưa có đủ model log return đã huấn luyện cho website này.")
+    metadata = json.loads((folder / "metadata.json").read_text(encoding="utf-8"))
+    transform = metadata.get("target_transform", "price")
+    if transform != variant:
+        raise ValueError("Checkpoint và cách xử lý dữ liệu không khớp.")
+    if variant == "log_return":
+        if metadata.get("input_transform") != "log_return" or metadata.get("sequence_length") != metadata["lookback"] - 1:
+            raise ValueError("Cấu hình cửa sổ log return không hợp lệ.")
+    return folder
+
+
+def load_bundle(framework="PyTorch", variant="price"):
     if framework not in ("PyTorch", "Keras"):
         raise ValueError("Model không hợp lệ.")
-    metadata = json.loads((ROOT / "model/metadata.json").read_text(encoding="utf-8"))
+    folder = model_directory(variant)
+    metadata = json.loads((folder / "metadata.json").read_text(encoding="utf-8"))
     if framework == "Keras":
         os.environ["KERAS_BACKEND"] = "torch"
         import keras
-        model = keras.models.load_model(ROOT / "model/keras_best.keras", compile=False)
+        model = keras.models.load_model(folder / "keras_best.keras", compile=False)
         return {"model": model, "metadata": metadata, "framework": framework}
     cfg = metadata["config"]
     torch.set_num_threads(1)
     model = VanillaRNN(cfg["hidden"], cfg["dropout"])
-    model.load_state_dict(torch.load(ROOT / "model/pytorch_best.pt", map_location="cpu", weights_only=True))
+    model.load_state_dict(torch.load(folder / "pytorch_best.pt", map_location="cpu", weights_only=True))
     model.eval()
     return {"model": model, "metadata": metadata, "framework": framework}
 
@@ -61,6 +80,8 @@ def prepare_data(frame, metadata, group):
     values = frame[target].to_numpy(dtype=float)
     if not np.isfinite(values).all() or (values < 0).any():
         raise ValueError("Giá phải là số không âm và hữu hạn.")
+    if metadata.get("target_transform") == "log_return" and (values <= 0).any():
+        raise ValueError("Model log return yêu cầu mọi giá lớn hơn 0.")
     return frame.sort_values("Date").reset_index(drop=True)
 
 def predict(prices, bundle, group):
@@ -76,7 +97,11 @@ def predict(prices, bundle, group):
     if values.shape != (metadata["lookback"],) or not np.isfinite(values).all() or (values < 0).any():
         raise ValueError(f"Cần đúng {metadata['lookback']} giá không âm và hữu hạn.")
     scaler = metadata["scalers"][group]
-    z = ((values - scaler["mean"]) / scaler["scale"]).astype(np.float32).reshape(1, -1, 1)
+    log_return = metadata.get("target_transform") == "log_return"
+    if log_return and (values <= 0).any():
+        raise ValueError("Model log return yêu cầu mọi giá lớn hơn 0.")
+    features = np.diff(np.log(values)) if log_return else values
+    z = ((features - scaler["mean"]) / scaler["scale"]).astype(np.float32).reshape(1, -1, 1)
     with torch.inference_mode():
         if bundle.get("framework") == "Keras":
             output = bundle["model"](z, training=False)
@@ -85,6 +110,11 @@ def predict(prices, bundle, group):
         else:
             normalized = float(bundle["model"](torch.from_numpy(z)).item())
         result = normalized * scaler["scale"] + scaler["mean"]
+    if log_return:
+        with np.errstate(over="ignore", invalid="ignore"):
+            result = values[-1] * np.exp(result)
+        if result <= 0:
+            raise ValueError("Model log return trả về giá không hợp lệ.")
     if not np.isfinite(result):
         raise ValueError("Model trả về giá trị không hữu hạn.")
     return result

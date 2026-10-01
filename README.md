@@ -77,3 +77,13 @@ Tham khảo: [Render Blueprints](https://render.com/docs/infrastructure-as-code)
 ## Chọn và so sánh model
 
 Chọn PyTorch, Keras hoặc So sánh cả hai ở thanh bên. Keras chạy bằng backend torch, không cần TensorFlow. Tỉ lệ dự đoán đúng là phần trăm mẫu kiểm thử có sai số tương đối trong ngưỡng chọn (mặc định 5%). Đây không phải xác suất dự báo tương lai đúng. Bảng và biểu đồ so sánh dùng cùng các mẫu kiểm thử của chuỗi đang chọn; có thể xuất CSV.
+
+## Chọn cách dự đoán
+
+Thanh bên có **Giá trực tiếp** và **Log return**, mỗi cách hỗ trợ PyTorch, Keras hoặc so sánh cả hai.
+CSV tải lên vẫn chứa giá gốc. Kết quả dự đoán và bảng đánh giá sử dụng model/scaler của cách đang chọn; kết quả trả về USD.
+
+Model giá trực tiếp nằm trong `model/`. Model log return nằm trong `model/log_return/`.
+Sau khi chạy notebook log return tương ứng, chép các file sau từ thư mục lần chạy trong `artifacts/` vào `model/log_return/`:
+`metadata.json`, `pytorch_best.pt`, `keras_best.keras`, `test_predictions.csv`, `model_comparison.csv`, `next_step_forecast.csv`.
+Khởi động lại website sau khi thay checkpoint. Nếu chưa đủ file, lựa chọn Log return hiển thị thông báo chưa có model.

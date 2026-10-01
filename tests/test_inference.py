@@ -77,6 +77,25 @@ class InferenceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.api.prepare_data(frame.head(2), self.meta, self.group)
 
+
+    def test_log_return_bundle(self):
+        if not (ROOT / "model/log_return/metadata.json").exists():
+            with self.assertRaises(FileNotFoundError):
+                self.api.load_bundle("PyTorch", "log_return")
+            return
+        saved = pd.read_csv(ROOT / "model/log_return/test_predictions.csv")
+        for framework in ("PyTorch", "Keras"):
+            bundle = self.api.load_bundle(framework, "log_return")
+            for _, row in saved.groupby("group").first().reset_index().iterrows():
+                frame = self.api.prepare_data(self.raw, bundle["metadata"], row["group"])
+                values = frame.loc[frame.Date < pd.Timestamp(row.Date), bundle["metadata"]["target"]].tail(bundle["metadata"]["lookback"]).tolist()
+                result = self.api.predict(values, bundle, row["group"])
+                self.assertAlmostEqual(result, row[framework + " RNN"], delta=1e-4)
+                doubled = self.api.predict([v * 2 for v in values], bundle, row["group"])
+                self.assertAlmostEqual(doubled, result * 2, delta=1e-4)
+                with self.assertRaises(ValueError):
+                    self.api.predict([0.] + values[1:], bundle, row["group"])
+
 if __name__ == "__main__":
     unittest.main()
 
